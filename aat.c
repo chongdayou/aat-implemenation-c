@@ -158,6 +158,22 @@ bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode* root) {
 	return success;
 }
 
+// using a stack implementation that is ChatGPT-generated for inorder print
 void aat_tree_inorder_print(AatTree* tree) {
+	NodeStack stack;
+	stack_init(&stack);
 
+	AatNode* current = tree->root;
+
+	while (!stack_is_empty(&stack) || current != bottom) {
+		while (current != bottom) {
+			stack_push(&stack, current);
+			current = current->left;
+		}
+		current = stack_pop(&stack);
+		printf("%d, ", current-> key);
+		current = current->right;
+	}
+
+	stack_free(&stack);
 }
