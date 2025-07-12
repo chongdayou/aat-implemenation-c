@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "stack.h"
+
 typedef struct {
 	int key;
 	int level;
@@ -154,4 +156,8 @@ bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode* root) {
 	}
 
 	return success;
+}
+
+void aat_tree_inorder_print(AatTree* tree) {
+
 }
