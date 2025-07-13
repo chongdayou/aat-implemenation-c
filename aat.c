@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 		v[i] = i;
 	}
 
-	for (int i = 0; i < n / 2; i++) {
+	for (int i = 0; i < n; i++) {
 		int j = rand() % n;
 		int temp = v[i];
 		v[i] = v[j];
@@ -203,9 +203,27 @@ int main(int argc, char* argv[]) {
 	printf("Inorder traversal of the tree: \n");
 	aat_tree_inorder_print(tree);
 	printf("\n");
+
+	printf("Deleting all multiples of 10 in the tree...\n");
+	printf("Inorder traversal after deletions: \n");
+	for (int i=0; i < 10; i++) {
+		aat_tree_delete((i+1)*10, tree);
+	}
+	aat_tree_inorder_print(tree);
+	printf("\n");
+	printf("Deleting all even numbers in the tree..." 
+		"this will also test removing none existing values " 
+		"as some even numbers are multiples of 10.\n");
+	printf("Inorder traversal after deletions: \n");
+	for (int i=0; i < n/2; i++) {
+		aat_tree_delete((i+1)*2, tree);
+	}
+	aat_tree_inorder_print(tree);
+	printf("\n");
+
 	aat_tree_free(tree);
-	free(bottom); // bad practice, probably, but good for demo
 	free(v);
 
+	free(bottom); // bad practice, probably, but enough for demo
 	return 0;
 }
