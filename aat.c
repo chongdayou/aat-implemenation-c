@@ -4,11 +4,11 @@
 
 #include "stack.h"
 
-typedef struct {
+typedef struct AatNode {
 	int key;
 	int level;
-	AatNode* left;
-	AatNode* right;
+	struct AatNode* left;
+	struct AatNode* right;
 } AatNode;
 
 AatNode* bottom;
@@ -68,94 +68,94 @@ AatTree* aat_tree_make() {
 	bottom->left = bottom;
 	bottom->right = bottom;
 	bottom->level = 0;
-	bottom->key = NULL;
+	bottom->key = 0;
 
 	tree->root = bottom;
 	tree->last = bottom;
 	tree->deleted = bottom;
+
+	return tree;
+}
+
+void aat_tree_free_helper(AatNode* root) {
+	if (root == NULL || root == bottom) return;
+	aat_tree_free_helper(root->left);
+	aat_tree_free_helper(root->right);
+	free(root);
 }
 
 void aat_tree_free(AatTree* tree) {
 	aat_tree_free_helper(tree->root);
+	free(tree);
 }
 
-void aat_tree_free_helper(AatNode* root) {
-	if (root == NULL) return;
-	if (root == bottom) {
-		free(bottom);
-		return;
-	}
-	aat_tree_free(root->left);
-	aat_tree_free(root->right);
-	aat_node_free(root);
+void aat_tree_insert_helper(int key_, AatNode** root);
+void aat_tree_insert_rebalance(int key_, AatNode** root) {
+	if (key_ < (*root)->key) aat_tree_insert_helper(key_, &(*root)->left);
+	else aat_tree_insert_helper(key_, &(*root)->right);
+	aat_node_skew(root);
+	aat_node_split(root);
 }
 
-void aat_tree_insert(int key_, AatTree* tree) {
-	aat_tree_insert_helper(key_, tree->root);
-}
-
-void aat_tree_insert_helper(int key_, AatNode* root) {
-	if (root == bottom) {
-		AatNode* new_node = aat_node_make(key_);
+void aat_tree_insert_helper(int key_, AatNode** root) {
+	if (*root == bottom) {
+		*root = aat_node_make(key_);
 	} else {
 		aat_tree_insert_rebalance(key_, root);
 	}
 }
 
-void aat_tree_insert_rebalance(int key_, AatNode* root) {
-	if (key_ < root->key) aat_tree_insert(key_, root->left);
-	else aat_tree_insert(key_, root->right);
-	aat_node_skew(root);
-	aat_node_split(root);
+void aat_tree_insert(int key_, AatTree* tree) {
+	aat_tree_insert_helper(key_, &tree->root);
 }
 
-bool aat_tree_delete(int key_, AatTree* tree) {
-	return aat_tree_delete_helper(key_, tree, tree->root);
-}
-
-bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode* root) {
+bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode** root) {
 	// base case, reach bottom
-	if (root == bottom) return false;
+	if (*root == bottom) return false;
 
 	bool success = false;
 	// search down the tree
-	tree->last = root;
-	if (key_ < root->key) {
-		success = aat_tree_delete_helper(key_, tree, root->left);
+	tree->last = *root;
+	if (key_ < (*root)->key) {
+		success = aat_tree_delete_helper(key_, tree, &(*root)->left);
 	}
 	else {
-		tree->deleted = root;
-		success = aat_tree_delete_helper(key_, tree, root->right);
+		tree->deleted = *root;
+		success = aat_tree_delete_helper(key_, tree, &(*root)->right);
 	}
 
 	// remove
 	if (
-		(root == tree->last) && 
+		(*root == tree->last) && 
 		(tree->deleted != bottom) && 
 		(key_ == tree->deleted->key)
 	) {
-		tree->deleted->key = root->key;
+		tree->deleted->key = (*root)->key;
 		tree->deleted = bottom;
-		root = root->right;
+		*root = (*root)->right;
 		aat_node_free(tree->last);
 		success = true;
 	}
 
 	// rebalance on the way back
 	else if (
-		(root->left->level < root->level - 1) || 
-		(root->right->level < root-> level - 1)
+		((*root)->left->level < (*root)->level - 1) || 
+		((*root)->right->level < (*root)-> level - 1)
 	) {
-		root->level--;
-		if (root->right->level > root->level) root->right->level--;
+		(*root)->level--;
+		if ((*root)->right->level > (*root)->level) (*root)->right->level--;
 		aat_node_skew(root);
-		aat_node_skew(root->right);
-		aat_node_skew(root->right->right);
+		aat_node_skew(&(*root)->right);
+		aat_node_skew(&(*root)->right->right);
 		aat_node_split(root);
-		aat_node_split(root->right);
+		aat_node_split(&(*root)->right);
 	}
 
 	return success;
+}
+
+bool aat_tree_delete(int key_, AatTree* tree) {
+	return aat_tree_delete_helper(key_, tree, &tree->root);
 }
 
 // using a stack implementation that is ChatGPT-generated for inorder print
@@ -176,4 +176,36 @@ void aat_tree_inorder_print(AatTree* tree) {
 	}
 
 	stack_free(&stack);
+}
+
+int main(int argc, char* argv[]) {
+	size_t n = 100;
+	int*  v = malloc(n * sizeof(int));
+	for (int i = 0; i < n; i++) {
+		v[i] = i;
+	}
+
+	for (int i = 0; i < n / 2; i++) {
+		int j = rand() % n;
+		int temp = v[i];
+		v[i] = v[j];
+		v[j] = temp;
+	}
+
+	AatTree* tree = aat_tree_make();
+	printf("The list of input by order of insertion: \n");
+	for (int i=0; i < n; i++) {
+		printf("%d, ", v[i]);
+		aat_tree_insert(v[i], tree);
+	}
+	printf("\n");
+
+	printf("Inorder traversal of the tree: \n");
+	aat_tree_inorder_print(tree);
+	printf("\n");
+	aat_tree_free(tree);
+	free(bottom); // bad practice, probably, but good for demo
+	free(v);
+
+	return 0;
 }
