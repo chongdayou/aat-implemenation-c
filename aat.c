@@ -11,14 +11,22 @@ typedef struct AatNode {
 	struct AatNode* right;
 } AatNode;
 
-AatNode* bottom;
+AatNode _aat_bottom_;
+AatNode* _aat_bottom = &_aat_bottom_;
+
+void init_bottom() {
+	_aat_bottom->left = _aat_bottom;
+	_aat_bottom->right = _aat_bottom;
+	_aat_bottom->level = 0;
+	_aat_bottom->key = 0;
+}
 
 AatNode* aat_node_make(int key_) {
 	AatNode* node = malloc(sizeof(AatNode));
 	node->key = key_;
 	node->level = 1;
-	node->left = bottom;
-	node->right = bottom;
+	node->left = _aat_bottom;
+	node->right = _aat_bottom;
 	return node;
 }
 
@@ -63,22 +71,15 @@ typedef struct {
 
 AatTree* aat_tree_make() {
 	AatTree* tree = malloc(sizeof(AatTree));
-
-	bottom = malloc(sizeof(AatNode));
-	bottom->left = bottom;
-	bottom->right = bottom;
-	bottom->level = 0;
-	bottom->key = 0;
-
-	tree->root = bottom;
-	tree->last = bottom;
-	tree->deleted = bottom;
+	tree->root = _aat_bottom;
+	tree->last = _aat_bottom;
+	tree->deleted = _aat_bottom;
 
 	return tree;
 }
 
 void aat_tree_free_helper(AatNode* root) {
-	if (root == NULL || root == bottom) return;
+	if (root == NULL || root == _aat_bottom) return;
 	aat_tree_free_helper(root->left);
 	aat_tree_free_helper(root->right);
 	free(root);
@@ -98,7 +99,7 @@ void aat_tree_insert_rebalance(int key_, AatNode** root) {
 }
 
 void aat_tree_insert_helper(int key_, AatNode** root) {
-	if (*root == bottom) {
+	if (*root == _aat_bottom) {
 		*root = aat_node_make(key_);
 	} else {
 		aat_tree_insert_rebalance(key_, root);
@@ -110,8 +111,8 @@ void aat_tree_insert(int key_, AatTree* tree) {
 }
 
 bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode** root) {
-	// base case, reach bottom
-	if (*root == bottom) return false;
+	// base case, reach _aat_bottom
+	if (*root == _aat_bottom) return false;
 
 	bool success = false;
 	// search down the tree
@@ -127,11 +128,11 @@ bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode** root) {
 	// remove
 	if (
 		(*root == tree->last) && 
-		(tree->deleted != bottom) && 
+		(tree->deleted != _aat_bottom) && 
 		(key_ == tree->deleted->key)
 	) {
 		tree->deleted->key = (*root)->key;
-		tree->deleted = bottom;
+		tree->deleted = _aat_bottom;
 		*root = (*root)->right;
 		aat_node_free(tree->last);
 		success = true;
@@ -165,8 +166,8 @@ void aat_tree_inorder_print(AatTree* tree) {
 
 	AatNode* current = tree->root;
 
-	while (!stack_is_empty(&stack) || current != bottom) {
-		while (current != bottom) {
+	while (!stack_is_empty(&stack) || current != _aat_bottom) {
+		while (current != _aat_bottom) {
 			stack_push(&stack, current);
 			current = current->left;
 		}
@@ -192,6 +193,7 @@ int main(int argc, char* argv[]) {
 		v[j] = temp;
 	}
 
+	init_bottom();
 	AatTree* tree = aat_tree_make();
 	printf("The list of input by order of insertion: \n");
 	for (int i=0; i < n; i++) {
@@ -221,9 +223,21 @@ int main(int argc, char* argv[]) {
 	aat_tree_inorder_print(tree);
 	printf("\n");
 
-	aat_tree_free(tree);
-	free(v);
+	printf("Building a second tree for testing if bottom node is shared correctly: \n");
+	AatTree* secTree = aat_tree_make();
+	for (int i=n; i >= 0; i--) {
+		aat_tree_insert(i, secTree);
+	}
+	printf("All power of 2 are deleted in this tree for fun.\n");
+	for (int i=1; i<n; i=i*2) {
+		aat_tree_delete(i, secTree);
+	}
+	printf("Inorder traversal of second tree: \n");
+	aat_tree_inorder_print(secTree);
+	printf("\n");
 
-	free(bottom); // bad practice, probably, but enough for demo
+	aat_tree_free(tree);
+	aat_tree_free(secTree);
+	free(v);
 	return 0;
 }
