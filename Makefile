@@ -1,10 +1,26 @@
 default:
-	$(MAKE) clean
-	$(MAKE) build
-	./aat
+	mkdir -p build
+	$(MAKE) runAatMain
 
-build:
-	gcc aat.c stack.c -o aat -Wall -O2
+runAatMain: cleanAatMain buildAat
+	./build/aatMain
 
-clean:
-	rm -f aat
+buildAat: build/main-aat.o build/aat.o build/stack.o build/strbuffer.o
+	gcc build/main-aat.o build/aat.o build/stack.o build/strbuffer.o -o build/aatMain
+
+cleanAatMain:
+	rm -f build/*
+
+build/main-aat.o: src/main-aat.c
+	gcc -c src/main-aat.c -o build/main-aat.o -Wall -O2 -MMD -MP
+
+build/aat.o: src/aat.c
+	gcc -c src/aat.c -Iinclude -o build/aat.o -Wall -O2 -MMD -MP
+
+build/stack.o: src/stack.c
+	gcc -c src/stack.c -Iinclude -o build/stack.o -Wall -O2 -MMD -MP
+
+build/strbuffer.o: src/strbuffer.c
+	gcc -c src/strbuffer.c -Iinclude -o build/strbuffer.o -Wall -O2 -MMD -MP
+
+-include build/*.d
