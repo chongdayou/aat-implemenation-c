@@ -9,17 +9,6 @@
 
 // TODO: enforce type safety/type checking? Now everything working with key and value are void*
 // 		which requires ethical use from the caller.
-// TODO: right now a bunch of function pointers are needed to make a tree, 
-// 		find a way to make it easier for the caller?
-
-// -- internal struct definitions --
-struct aat_node {
-	void* key;
-	void* value;
-	int level;
-	AatNode* left;
-	AatNode* right;
-};
 
 // -- global variables --
 AatNode _aat_bottom_;
@@ -619,7 +608,7 @@ char* aat_tree_inorder_list(AatTree* tree) {
 		strbuffer_append(sb, value_str);
 		free(value_str);
 		//if (!stack_is_empty(&stack)) 
-		strbuffer_append(sb, "), ");
+		strbuffer_append(sb, "),");
 		current = current->right;
 	}
 
@@ -628,3 +617,95 @@ char* aat_tree_inorder_list(AatTree* tree) {
 	strbuffer_free(sb);
 	return ret;
 }
+
+/**
+ * Make a new iterator for given AatTree.
+ * 
+ * @param tree Tree to make the iterator upon
+ * 
+ * @return A new AatIterator
+ * 
+ * @note Insertion and deletion of nodes in between an iterator's lifecycle may not be reflected
+ * 		and may cause unexpected errors, especially segmentation fault with deletion
+ */
+AatIterator* aat_iterator_make(AatTree* tree_) {
+	AatIterator* iterator = malloc(sizeof(AatIterator));
+	NodeStack* stack_ptr = malloc(sizeof(NodeStack));
+	stack_init(stack_ptr);
+	iterator->iterate_stack = stack_ptr;
+	iterator->is_end = false;
+	iterator->tree = tree_;
+
+	AatNode* current = iterator->tree->root;
+	while (current != _aat_bottom) {
+		stack_push(stack_ptr, current);
+		current = current->left;
+	}
+
+	return iterator;
+}
+
+/**
+ * Check if iterator has traversed through every node
+ * 
+ * @param iterator Iterator to check
+ * 
+ * @return True if iterator has next node, false otherwise
+ */
+bool aat_iterator_has_next(AatIterator* iterator) {
+	return !iterator->is_end;
+}
+
+/**
+ * Get next AatNode in the iterator
+ * 
+ * @param iterator Iterator to get next node from
+ * 
+ * @return The next AatNode in the iterator, NULL if iterator does not have next node
+ */
+AatNode* aat_iterator_next(AatIterator* iterator) {
+	if (!aat_iterator_has_next(iterator)) return NULL;
+
+	AatNode* popped = stack_pop(iterator->iterate_stack);
+	AatNode* next = popped->right;
+	//int depth = 0;
+	while(next != _aat_bottom) {
+		//printf("depth=%d\n", depth++);
+		stack_push(iterator->iterate_stack, next);
+		next = next->left;
+	}
+
+	if (stack_is_empty(iterator->iterate_stack)) iterator->is_end = true;
+
+	return popped;
+}
+
+/**
+ * Free given AatIterator
+ * 
+ * @param iterator Iterator to free from heap memory
+ */
+void aat_iterator_free(AatIterator* iterator) {
+	if (iterator) {
+		if (iterator->iterate_stack) {
+			stack_free(iterator->iterate_stack);
+			free(iterator->iterate_stack);
+		}
+		iterator->tree = NULL;
+		free(iterator);
+	}
+}
+// void aat_tree_walk(AatTree* tree, void (*func)(AatTree* tree, AatNode *, void *), void* data) {
+// 	aat_tree_walk_aux(tree, tree->root, func, data);
+// }
+
+// void aat_tree_walk_aux(AatTree* tree, AatNode* root, void (*func)(AatTree* tree, AatNode *, void *), void *data) {
+// 	if(root != NULL) {
+// 		aat_tree_walk_aux(tree, root->left, func, data);
+// 		func(tree, root->key, data);
+// 		aat_tree_walk_aux(tree, root->right, func, data);
+// 	}
+// }
+
+
+
