@@ -5,10 +5,15 @@ AATree is a type of balanced binary tree. For more information about AATree, che
 
 # Generic Type Behavior
 ![Generic Type Behavior Processes](images/genericProcess.png)
+
 Generic type behavior is achieved by including function pointers in the tree struct. By setting key and value to type void*, their type behavior are entirely handled by user defined methods, such as initialize, free, to string, and compare.
+
 ![AATree Struct](images/aatStruct.png)
+
 These methods are only passed in at tree creation. The idea is that all nodes in a single tree should have the same key and value types, and type handling methods are called by the tree upon nodes when needed. Doing so dramatically reduce the memory needed to save function pointers in each node struct.
-![Type Behavior Methods](images/genericMethods.png)
+
+![Type Behavior Methods](images/aatMake.png)
+
 For demonstration, type behavior methods to support int and char* are already included in aat.c. For an example of initializing an AATree, look at how aat_tree_make() is used in main-aat.c.
 
 # Iterable Behavior
