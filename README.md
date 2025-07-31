@@ -1,7 +1,7 @@
 # AATree Implementation in C
 
 AATree with generic type behavior and iterator, implemented in C
-AATree is a type of balanced binary tree. For more information about AATree, check out this paper: Balanced Search Tree Made Simple by Arne Andersson
+AATree is a type of balanced binary tree. For more information about AATree, check out this paper: [Balanced Search Tree Made Simple by Arne Andersson](https://user.it.uu.se/~arneande/abs/simp.html).
 
 # Generic Type Behavior
 ![Generic Type Behavior Processes](images/genericProcess.png)
