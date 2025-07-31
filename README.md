@@ -39,12 +39,3 @@ For an example of how the implementation is used, checked out my [multithreaded-
 # Additional Info
 ## Reference
 [Balanced Search Tree Made Simple](https://user.it.uu.se/~arneande/abs/simp.html) by Arne Andersson
-
-```C
-#include<stdio.h>
-#include<stdlib.h>
-int main(int argc, char* argv[]){
-	printf("Hello, world!\n");
-	return EXIT_SUCCESS;
-}
-```
